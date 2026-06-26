@@ -3,122 +3,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-sealed class TimerState {
-  const TimerState();
- }
+import 'package:fitfeat/logic/timer.dart';
 
-class NotStarted extends TimerState { }
+import 'package:fitfeat/model/timer.dart';
 
-class Paused extends TimerState { 
-  final TimerState previous;
-  const Paused({required this.previous});
-}
-
-class PrimaryRunning extends TimerState {
-  double remaining;
-  PrimaryRunning({required this.remaining});
-}
-
-class SetupRunning extends TimerState {
-  double remaining;
-  SetupRunning({required this.remaining});
-}
-
-class OverdueRunning extends TimerState {
-  double overdue;
-  OverdueRunning({required this.overdue});
-}
-
-
-class TimerSettings {
-  const TimerSettings({required this.durationSeconds, required this.setupDurationSeconds});
-  final int durationSeconds;
-  final int setupDurationSeconds;
-}
-
-class TimerLogic {
-  
-  TimerState _state = NotStarted();
-  final TimerSettings settings;
-
-  TimerLogic(this.settings);
-  void onStart() {
-    switch(_state) {
-      case NotStarted():
-        if(settings.setupDurationSeconds == 0) {
-          _state = PrimaryRunning(remaining: settings.durationSeconds * 1000.0);
-        } else {
-          _state = SetupRunning(remaining: settings.setupDurationSeconds * 1000.0);
-        }
-        break;
-      default:
-        throw StateError("Tried to start a timer that is already running?");
-    }
-    
-  }
-
-  void onReset() {
-    _state = NotStarted();
-  }
-
-  void onPause() {
-    _state = Paused(previous: _state);
-  }
-
-  void onResume() {
-    switch(_state)  {
-      case Paused(previous: var previous):
-        _state = previous;
-        break;
-      default:
-        throw StateError("Should be in paused state when resuming");
-    }
-  }
-
-
-  void tick(double elapsed) {
-    switch(_state) {
-      case PrimaryRunning(remaining: var remaining):
-        double newRemaining = remaining - elapsed;
-        if(newRemaining <= 0.0) {
-          _state = OverdueRunning(overdue: -newRemaining);
-        } else {
-          _state = PrimaryRunning(remaining: newRemaining);
-        }
-        break;
-      case OverdueRunning(overdue: var overdue):
-        _state = OverdueRunning(overdue: overdue + elapsed);
-        break;
-      case SetupRunning(remaining: var remaining):
-        double newRemaining = remaining - elapsed;
-        if(newRemaining <= 0.0) {
-          _state = PrimaryRunning(remaining: settings.durationSeconds * 1000 - elapsed);
-        } else {
-          _state = SetupRunning(remaining: newRemaining);
-        }
-      default:
-      throw StateError("Cannot tick when not running");
-    }
-  }
-
-  double progress(TimerState state) {
-    switch(state) {
-
-      case NotStarted():
-        return 0.0;
-      case Paused():
-        return progress(state.previous);
-      case PrimaryRunning(remaining: var remaining):
-        return 1.0 - (remaining / (settings.durationSeconds * 1000.0));
-
-      case SetupRunning(remaining: var remaining):
-        return 1.0 - (remaining / (settings.setupDurationSeconds * 1000.0));
-        
-      case OverdueRunning(overdue: var overdue):
-        return 1 + (overdue / (settings.durationSeconds * 1000.0));
-    }
-  }
-}
 
 
 
@@ -145,6 +33,7 @@ class TimerProgressionWheelWidget extends StatelessWidget {
 // This is the Painter class
 class TimerProgressionPainter extends CustomPainter {
   double progress = 0.0;
+
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
@@ -177,6 +66,7 @@ class TimerWidget extends StatefulWidget {
   State<TimerWidget> createState() => _TimerState();
 }
 
+
 class _TimerState extends State<TimerWidget> {
   Timer? _timer;
   final Stopwatch _stopwatch = Stopwatch();  
@@ -195,20 +85,82 @@ class _TimerState extends State<TimerWidget> {
       double timeElapsedSinceLastTick = _stopwatch.elapsedMilliseconds.toDouble();
       timerLogic.tick(timeElapsedSinceLastTick);
       _stopwatch..reset()..start();
-      _progress = timerLogic.progress(timerLogic._state);
+      _progress = timerLogic.progress(timerLogic.state);
     });
-    
   }
 
   void _onTimerStart() {
-    if (_timer != null) {
-      _timer!.cancel();
-      _stopwatch.stop();
+    setState(() {
+      if (_timer != null) {
+        _timer!.cancel();
+        _stopwatch.stop();
+      }
+      _progress = 0.0;
+      _stopwatch.start();
+      _timer = Timer.periodic(Duration(milliseconds: widget.timerResolutionMs), _onTimerTick);
+      timerLogic.onStart();
+    });
+  }
+
+  void _onTimerResume() {
+    setState(() {
+      if (_timer != null) {
+        _timer!.cancel();
+        _stopwatch.stop();
+      }
+      _stopwatch.start();
+      _timer = Timer.periodic(Duration(milliseconds: widget.timerResolutionMs), _onTimerTick);
+      timerLogic.onResume();
+    });
+  }
+
+  void _onTimerPause() {
+    setState(() {
+
+      if (_timer != null) {
+        _timer!.cancel();
+        _stopwatch.stop();
+      }
+      timerLogic.onPause();
+    });
+  }
+  
+  void _onTimerReset() {
+    setState(() {
+      if (_timer != null) {
+        _timer!.cancel();
+        _stopwatch.stop();
+      }
+      _progress = 0.0;
+      timerLogic.onReset();
+    });
+  }
+  
+
+  
+
+  Widget buildControls(BuildContext context) 
+  {
+    switch(timerLogic.state) {
+      
+      case NotStarted():
+        return FilledButton(onPressed: _onTimerStart, child: Icon(Icons.play_arrow));
+      case Paused():
+          return Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            FilledButton(onPressed: _onTimerResume, child: Icon(Icons.play_arrow)),
+            FilledButton(onPressed: _onTimerReset, child: Icon(Icons.stop)),
+          ]));
+
+      case PrimaryRunning():
+        return Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          FilledButton(onPressed: _onTimerPause, child: Icon(Icons.pause)),
+          FilledButton(onPressed: _onTimerReset, child: Icon(Icons.stop)),
+        ]));
+      case SetupRunning():
+        return FilledButton(onPressed: _onTimerReset, child: Icon(Icons.stop));
+      case OverdueRunning():
+        return FilledButton(onPressed: _onTimerReset, child: Icon(Icons.stop));
     }
-    _progress = 0.0;
-    _stopwatch.start();
-    _timer = Timer.periodic(Duration(milliseconds: widget.timerResolutionMs), _onTimerTick);
-    timerLogic.onStart();
   }
 
   @override
@@ -217,13 +169,7 @@ class _TimerState extends State<TimerWidget> {
       mainAxisAlignment: .center,
       children: [
         TimerProgressionWheelWidget(progress: _progress),
-        IconButton.filled(
-          onPressed: _onTimerStart,
-          icon: Icon(
-            Icons.play_arrow,
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
-        ),
+        buildControls(context),
         Text(
           '$_progress',
           style: Theme.of(context).textTheme.headlineMedium,
