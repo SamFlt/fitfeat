@@ -26,7 +26,7 @@ class TimerProgressionWheelWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var size = Size(diameter, diameter);
     painter.progress = progress;
-    return CustomPaint(painter: painter, size: size);
+    return CustomPaint(painter: painter, size: size, child: SizedBox(height: size.height, width:size.width, child: Center(child: Text('Hello')) ));
   }
 }
 

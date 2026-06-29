@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:fitfeat/components/timer.dart';
 
 
-class TimerPage extends StatefulWidget {
-  const TimerPage({super.key, required this.title});
+class TimerScreen extends StatefulWidget {
+  const TimerScreen({super.key, required this.title});
 
   final String title;
 
   @override
-  State<TimerPage> createState() => _TimerPageState();
+  State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _TimerPageState extends State<TimerPage> {
+class _TimerScreenState extends State<TimerScreen> {
   
 
   @override

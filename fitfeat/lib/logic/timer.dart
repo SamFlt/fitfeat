@@ -28,7 +28,6 @@ class TimerLogic {
       default:
         throw StateError("Tried to start a timer that is already running?");
     }
-    
   }
 
   void onReset() {

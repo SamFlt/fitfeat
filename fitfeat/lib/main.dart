@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'pages/home_page.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const FitApp());
@@ -16,7 +16,7 @@ class FitApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepOrange),
+        colorScheme: .fromSeed(seedColor: Colors.orange),
       ),
       home: const HomePage(title: 'Fit Feat'),
     );
