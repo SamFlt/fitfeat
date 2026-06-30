@@ -1,3 +1,6 @@
+import 'package:fitfeat/data/db_savable.dart';
+import 'package:sqflite/sqflite.dart';
+
 enum Skill {
   verticalPush,
   verticalPull,
@@ -34,9 +37,23 @@ sealed class RepBasedExercise extends ExerciseInstanciation {
 
 
 
+const exerciseColName = 'name';
+const exerciseColDesc = 'description';
+
 class Exercise {
   final String name;
   final List<Skill> skills;
   const Exercise({required this.name, required this.skills});
-
 }
+
+
+class ExerciseDB with DBRepresentable {
+  @override
+  Future<void> onCreate(Database db) {
+    return db.execute(
+      '''CREATE TABLE Exercise(id INTEGER PRIMARY KEY AUTOINCREMENT, $exerciseColName TEXT NOT NULL, $exerciseColDesc TEXT NOT NULL)'''
+    );
+  }
+}
+
+

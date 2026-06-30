@@ -1,7 +1,8 @@
-import 'package:fitfeat/data/exercise_repository.dart';
+import 'package:fitfeat/data/exercise_service.dart';
 import 'package:fitfeat/model/exercise.dart';
+import 'package:fitfeat/screens/exercise_description_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:fitfeat/screens/timer_screen.dart';
+
 
 class ExerciseListScreen extends StatefulWidget {
   const ExerciseListScreen({super.key});
@@ -16,7 +17,12 @@ class ExerciseListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(decoration: BoxDecoration(color: Theme.of(context).secondaryHeaderColor), child: Text(_exercise.name));
+    return Material(child: ListTile(title: Text(_exercise.name), onTap: () => {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (ctx) => ExerciseDescriptionScreen(exercise: _exercise))
+      ),
+    }));
   }
 }
 
@@ -39,15 +45,6 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   final ExerciseService _exerciseService;
 
   _ExerciseListScreenState(): _exerciseService = ExerciseService();
-
-  VoidCallback toExerciseScreen(BuildContext context, Exercise ex) {
-    return () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (ctx) => const TimerScreen(title: 'Timer')),
-      );
-    };
-  }
 
   @override
   Widget build(BuildContext context) {
