@@ -55,7 +55,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
         title: Text("Exercises"),
       ),
       body: Center(
-        child: ExerciseList(exercises: _exerciseService.getBasicExercises())
+        child: ExerciseList(exercises: _exerciseService.getAllExercises())
       ),
     );
   }

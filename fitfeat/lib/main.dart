@@ -5,14 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+
+Future<void> initDb() async {
+  var db = await DBHelper().db();
+  var v = await db.query("Exercise");
+}
+
+Future<void> deleteAndCloseDB() async {
+  var db = await DBHelper().db();
+  await deleteDatabase(db.path);
+}
+
+void main() async {
 
   ExerciseDB baseExoDb = ExerciseDB();
   DBRepresentable.registerRepository(baseExoDb);
 
-  Future<Database> db = DBHelper().db();
-  db.then((value) => print('Finished creating database'));
+  await initDb();
   runApp(const FitApp());
+  await deleteAndCloseDB();
 }
 
 class FitApp extends StatelessWidget {

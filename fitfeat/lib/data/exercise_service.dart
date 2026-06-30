@@ -4,11 +4,10 @@ class ExerciseService {
 
   const ExerciseService();
 
-  List<Exercise> getBasicExercises() {
-    return [
-      Exercise(name: "Push up", skills: [.horizontalPress]),
-      Exercise(name: "Pull up", skills: [.verticalPull])
-    ];
+  List<Exercise> getAllExercises() {
+    return ExerciseDB().getDefaultExercises();
   }
+
+  
 
 }
